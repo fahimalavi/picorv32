@@ -18,8 +18,29 @@ GCC_WARNS += -Wredundant-decls -Wstrict-prototypes -Wmissing-prototypes -pedanti
 TOOLCHAIN_PREFIX = $(RISCV_GNU_TOOLCHAIN_INSTALL_PREFIX)i/bin/riscv32-unknown-elf-
 COMPRESSED_ISA = C
 
+TYPE=kem
+SCHEME=kyber1024
+IMPLEMENTATION=clean
+KAT_RNG=nist
+
+SCHEME_DIR=firmware/$(SCHEME)/$(IMPLEMENTATION)
+SCHEME_UPPERCASE=$(shell echo $(SCHEME) | tr a-z A-Z | sed 's/-//g')
+IMPLEMENTATION_UPPERCASE=$(shell echo $(IMPLEMENTATION) | tr a-z A-Z | sed 's/-//g')
+
+TEST_COMMON_DIR=firmware/test/common
+COMMON_DIR=firmware/common
+COMMON_FILES=$(COMMON_DIR)/aes.c $(COMMON_DIR)/sha2.c $(COMMON_DIR)/fips202.c $(COMMON_DIR)/nistseedexpander.c $(COMMON_DIR)/sp800-185.c
+COMMON_HEADERS=$(COMMON_DIR)/*.h
+DEST_DIR=../bin
+
+SCHEME_LIBRARY=$(SCHEME_DIR)/lib$(SCHEME)_$(IMPLEMENTATION).a
+SCHEME_FILES=$(wildcard $(SCHEME_DIR)/*.[chsS])
+
 # Add things like "export http_proxy=... https_proxy=..." here
 GIT_ENV = true
+
+$(SCHEME_LIBRARY): $(SCHEME_FILES)
+	cd $(SCHEME_DIR) && $(MAKE)
 
 test: testbench.vvp firmware/firmware.hex
 	$(VVP) -N $<
@@ -115,7 +136,7 @@ firmware/firmware.elf: $(FIRMWARE_OBJS) $(TEST_OBJS) firmware/sections.lds
 firmware/start.o: firmware/start.S
 	$(TOOLCHAIN_PREFIX)gcc -c -mabi=ilp32 -march=rv32im$(subst C,c,$(COMPRESSED_ISA)) -o $@ $<
 
-firmware/%.o: firmware/%.c
+firmware/%.o: firmware/%.c $(SCHEME_LIBRARY) 
 	$(TOOLCHAIN_PREFIX)gcc -c -mabi=ilp32 -march=rv32i$(subst C,c,$(COMPRESSED_ISA)) --std=c99 $(GCC_WARNS) -ffreestanding -nostdlib -fno-lto -o $@ $<
 
 tests/%.o: tests/%.S tests/riscv_test.h tests/test_macros.h
