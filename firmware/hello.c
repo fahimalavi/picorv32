@@ -54,6 +54,7 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 /*****************************************************************************/
 /* Defines:                                                                  */
 /*****************************************************************************/
+
 // The number of columns comprising a state in AES. This is a constant in AES. Value=4
 typedef unsigned char u_int8;
 #define Nb 4
@@ -431,9 +432,23 @@ static void InvShiftRows(state_t* state)
 static void Cipher(state_t* state, const u_int8* RoundKey)
 {
   u_int8 round = 0;
+  int  Begin_Time, End_Time;
 
   // Add the First round key to the state before starting the rounds.
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
   AddRoundKey(0, state, RoundKey);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("AddRoundKey total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
 
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical.
@@ -441,24 +456,106 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
   // Last one without MixColumns()
   for (round = 1; ; ++round)
   {
+    print_str("iteration:");
+    print_dec(round);
+    print_str("\n");
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     SubBytes(state);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("SubBytes total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     ShiftRows(state);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("ShiftRows total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
     if (round == Nr) {
       break;
     }
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     MixColumns(state);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("MixColumns total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     AddRoundKey(round, state, RoundKey);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("AddRoundKey total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
   }
   // Add round key to last round
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
   AddRoundKey(Nr, state, RoundKey);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("AddRoundKey total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
 }
 
 static void InvCipher(state_t* state, const u_int8* RoundKey)
 {
   u_int8 round = 0;
+  int  Begin_Time, End_Time;
 
   // Add the First round key to the state before starting the rounds.
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
   AddRoundKey(Nr, state, RoundKey);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("AddRoundKey total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
 
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical.
@@ -466,13 +563,65 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
   // Last one without InvMixColumn()
   for (round = (Nr - 1); ; --round)
   {
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     InvShiftRows(state);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("InvShiftRows total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     InvSubBytes(state);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("InvSubBytes total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     AddRoundKey(round, state, RoundKey);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("AddRoundKey total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
     if (round == 0) {
       break;
     }
+#ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
     InvMixColumns(state);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("InvMixColumns total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
   }
 
 }
@@ -572,6 +721,7 @@ static void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, u_int8* buf, size_t leng
 #endif // #if defined(CTR) && (CTR == 1)
 void hello(void)
 {
+    int  Begin_Time, End_Time;
 #if defined(AES256)
     u_int8 key[] = { 0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe, 0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
                       0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7, 0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4 };
@@ -587,11 +737,10 @@ void hello(void)
 
     u_int8 i, in[]  = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
     u_int8 RoundKey[AES_keyExpSize];
-    int  Begin_Time, End_Time;
 
- #ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
- #endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING
     AES_init_ctx(RoundKey, key);
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
@@ -604,9 +753,9 @@ void hello(void)
     print_str("\n");
 #endif // DISABLE_BENCH_MARKING
 
- #ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
- #endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING
     AES_ECB_encrypt(RoundKey, in);
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
@@ -619,7 +768,7 @@ void hello(void)
     print_str("\n");
 #endif // DISABLE_BENCH_MARKING
     
-    print_str("\nAES encryption Output:");
+    print_str("AES encryption Output:");
     for(i=0;i<16;i++)
       print_hex(*(in+i),2);
 
@@ -628,9 +777,10 @@ void hello(void)
     } else {
         print_str("FAILURE!\n");
     }*/
- #ifndef DISABLE_BENCH_MARKING
+    print_str("\n\n");
+#ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
- #endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING
     AES_ECB_decrypt(RoundKey, in);
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
