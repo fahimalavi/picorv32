@@ -6,6 +6,13 @@
 // means.
 
 #include "firmware.h"
+
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+
+
 /*
 
 This is an implementation of the AES algorithm, specifically ECB, CTR and CBC mode.
@@ -580,30 +587,65 @@ void hello(void)
 
     u_int8 i, in[]  = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a };
     u_int8 RoundKey[AES_keyExpSize];
+    int  Begin_Time, End_Time;
 
+ #ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING
     AES_init_ctx(RoundKey, key);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("Key Expansion total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+
+ #ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING
     AES_ECB_encrypt(RoundKey, in);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("AES encryption total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
     
     print_str("\nAES encryption Output:");
     for(i=0;i<16;i++)
       print_hex(*(in+i),2);
-
-
 
     /*if (0 == memcmp_dumped((char*) out, (char*) in, 16)) {
         printf("SUCCESS!\n");
     } else {
         print_str("FAILURE!\n");
     }*/
-    
+ #ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING
     AES_ECB_decrypt(RoundKey, in);
-    
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("\nAES decryption total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+
     print_str("\nAES decryption Output:");
     for(i=0;i<16;i++)
       print_hex(*(in+i),2);
-
-
-
 
     /*if (0 == memcmp_dumped((char*) out, (char*) in, 16)) {
         print_str("SUCCESS!\n");

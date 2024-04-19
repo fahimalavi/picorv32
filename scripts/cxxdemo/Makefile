@@ -8,8 +8,8 @@ LDFLAGS = -Wl,--gc-sections
 LDLIBS = -lstdc++
 
 TYPE=kem
-#SCHEME=kyber1024
-SCHEME=mceliece348864
+SCHEME=kyber1024
+#SCHEME=mceliece348864
 IMPLEMENTATION=clean
 KAT_RNG=nist
 
