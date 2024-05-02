@@ -7,6 +7,9 @@
 
 #include "firmware.h"
 
+#define DISABLE_BENCH_MARKING_MIXCOLUMN
+#define DISABLE_BENCH_MARKING_ENCRYPT
+#define DISABLE_BENCH_MARKING_DECRYPT
 #define time(cycles)\
 {\
 	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
@@ -315,6 +318,7 @@ static void ShiftRows(state_t* state)
 static u_int8 xtime(u_int8 x)
 {
   return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+  //return ((x<<1) ^ (((x>>7) & 1)?0x1b:0));
 }
 
 // MixColumns function mixes the columns of the state matrix
@@ -322,14 +326,71 @@ static void MixColumns(state_t* state)
 {
   u_int8 i;
   u_int8 Tmp, Tm, t;
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+  int  Begin_Time, End_Time;
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
   for (i = 0; i < 4; ++i)
   {  
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
     t   = (*state)[i][0];
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (End_Time);
+    print_str("\nmemory load MixColumn total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
     Tmp = (*state)[i][0] ^ (*state)[i][1] ^ (*state)[i][2] ^ (*state)[i][3] ;
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (End_Time);
+    print_str("\nmemory load with 3 OR ops MixColumn total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
     Tm  = (*state)[i][0] ^ (*state)[i][1] ; Tm = xtime(Tm);  (*state)[i][0] ^= Tm ^ Tmp ;
     Tm  = (*state)[i][1] ^ (*state)[i][2] ; Tm = xtime(Tm);  (*state)[i][1] ^= Tm ^ Tmp ;
     Tm  = (*state)[i][2] ^ (*state)[i][3] ; Tm = xtime(Tm);  (*state)[i][2] ^= Tm ^ Tmp ;
-    Tm  = (*state)[i][3] ^ t ;              Tm = xtime(Tm);  (*state)[i][3] ^= Tm ^ Tmp ;
+    Tm  = (*state)[i][3] ^ t ; 
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN             
+    Tm = xtime(Tm);  
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (End_Time);
+    print_str("\nxtime op MixColumn total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
+    (*state)[i][3] ^= Tm ^ Tmp ;
+#ifndef DISABLE_BENCH_MARKING_MIXCOLUMN
+    time (End_Time);
+    print_str("\nmemory load/store with 2 OR ops MixColumn total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING_MIXCOLUMN
   }
 }
 
@@ -432,14 +493,14 @@ static void InvShiftRows(state_t* state)
 static void Cipher(state_t* state, const u_int8* RoundKey)
 {
   u_int8 round = 0;
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
   int  Begin_Time, End_Time;
 
   // Add the First round key to the state before starting the rounds.
-#ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
   AddRoundKey(0, state, RoundKey);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (End_Time);
     print_str("AddRoundKey total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -448,7 +509,7 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
 
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical.
@@ -456,14 +517,11 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
   // Last one without MixColumns()
   for (round = 1; ; ++round)
   {
-    print_str("iteration:");
-    print_dec(round);
-    print_str("\n");
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
     SubBytes(state);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (End_Time);
     print_str("SubBytes total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -472,12 +530,12 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
-#ifndef DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
     ShiftRows(state);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (End_Time);
     print_str("ShiftRows total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -486,15 +544,15 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
     if (round == Nr) {
       break;
     }
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
     MixColumns(state);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (End_Time);
     print_str("MixColumns total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -503,12 +561,12 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
-#ifndef DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
     AddRoundKey(round, state, RoundKey);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (End_Time);
     print_str("AddRoundKey total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -517,14 +575,14 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
   }
   // Add round key to last round
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
   AddRoundKey(Nr, state, RoundKey);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_ENCRYPT
     time (End_Time);
     print_str("AddRoundKey total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -533,20 +591,20 @@ static void Cipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_ENCRYPT
 }
 
 static void InvCipher(state_t* state, const u_int8* RoundKey)
 {
   u_int8 round = 0;
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
   int  Begin_Time, End_Time;
 
   // Add the First round key to the state before starting the rounds.
-#ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
   AddRoundKey(Nr, state, RoundKey);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (End_Time);
     print_str("AddRoundKey total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -555,7 +613,7 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
 
   // There will be Nr rounds.
   // The first Nr-1 rounds are identical.
@@ -563,11 +621,11 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
   // Last one without InvMixColumn()
   for (round = (Nr - 1); ; --round)
   {
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
     InvShiftRows(state);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (End_Time);
     print_str("InvShiftRows total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -576,12 +634,12 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
-#ifndef DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
     InvSubBytes(state);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (End_Time);
     print_str("InvSubBytes total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -590,12 +648,12 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
-#ifndef DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
     AddRoundKey(round, state, RoundKey);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (End_Time);
     print_str("AddRoundKey total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -604,15 +662,15 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
     if (round == 0) {
       break;
     }
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (Begin_Time);
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
     InvMixColumns(state);
-#ifndef DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING_DECRYPT
     time (End_Time);
     print_str("InvMixColumns total cycles:");
     print_dec(End_Time - Begin_Time);
@@ -621,7 +679,7 @@ static void InvCipher(state_t* state, const u_int8* RoundKey)
     print_str(", End cycles:");
     print_dec(End_Time);
     print_str("\n");
-#endif // DISABLE_BENCH_MARKING
+#endif // DISABLE_BENCH_MARKING_DECRYPT
   }
 
 }
