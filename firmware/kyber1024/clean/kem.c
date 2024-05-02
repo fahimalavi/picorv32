@@ -7,6 +7,15 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+
+#define DISABLE_BENCH_MARKING_L1
+
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+
 /*************************************************
 * Name:        PQCLEAN_KYBER1024_CLEAN_crypto_kem_keypair_derand
 *
@@ -78,16 +87,41 @@ int PQCLEAN_KYBER1024_CLEAN_crypto_kem_enc_derand(uint8_t *ct,
     uint8_t buf[2 * KYBER_SYMBYTES];
     /* Will contain key, coins */
     uint8_t kr[2 * KYBER_SYMBYTES];
+ #ifndef DISABLE_BENCH_MARKING_L1
+    long            Begin_Time,
+                End_Time;
+ #endif // DISABLE_BENCH_MARKING_L1
 
     memcpy(buf, coins, KYBER_SYMBYTES);
 
     /* Multitarget countermeasure for coins + contributory KEM */
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     hash_h(buf + KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
-    hash_g(kr, buf, 2 * KYBER_SYMBYTES);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "hash_h cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
+    hash_g(kr, buf, 2 * KYBER_SYMBYTES);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "hash_g cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
+
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     /* coins are in kr+KYBER_SYMBYTES */
     PQCLEAN_KYBER1024_CLEAN_indcpa_enc(ct, buf, pk, kr + KYBER_SYMBYTES);
-
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_indcpa_enc cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
     memcpy(ss, kr, KYBER_SYMBYTES);
     return 0;
 }
@@ -142,23 +176,67 @@ int PQCLEAN_KYBER1024_CLEAN_crypto_kem_dec(uint8_t *ss,
     uint8_t kr[2 * KYBER_SYMBYTES];
     uint8_t cmp[KYBER_CIPHERTEXTBYTES + KYBER_SYMBYTES];
     const uint8_t *pk = sk + KYBER_INDCPA_SECRETKEYBYTES;
-
+ #ifndef DISABLE_BENCH_MARKING_L1
+    long            Begin_Time,
+                End_Time;
+ #endif // DISABLE_BENCH_MARKING_L1
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     PQCLEAN_KYBER1024_CLEAN_indcpa_dec(buf, ct, sk);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_indcpa_dec cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     /* Multitarget countermeasure for coins + contributory KEM */
     memcpy(buf + KYBER_SYMBYTES, sk + KYBER_SECRETKEYBYTES - 2 * KYBER_SYMBYTES, KYBER_SYMBYTES);
     hash_g(kr, buf, 2 * KYBER_SYMBYTES);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "memcpy and hash_g cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     /* coins are in kr+KYBER_SYMBYTES */
     PQCLEAN_KYBER1024_CLEAN_indcpa_enc(cmp, buf, pk, kr + KYBER_SYMBYTES);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_indcpa_enc cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     fail = PQCLEAN_KYBER1024_CLEAN_verify(ct, cmp, KYBER_CIPHERTEXTBYTES);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_verify cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     /* Compute rejection key */
     rkprf(ss, sk + KYBER_SECRETKEYBYTES - KYBER_SYMBYTES, ct);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "rkprf cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     /* Copy true key to return buffer if fail is false */
     PQCLEAN_KYBER1024_CLEAN_cmov(ss, kr, KYBER_SYMBYTES, (uint8_t) (1 - fail));
-
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_cmov cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
     return 0;
 }

@@ -8,6 +8,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
 
 /*************************************************
 * Name:        pack_pk
@@ -260,38 +266,126 @@ void PQCLEAN_KYBER1024_CLEAN_indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
     uint8_t nonce = 0;
     polyvec sp, pkpv, ep, at[KYBER_K], b;
     poly v, k, epp;
+ #ifndef DISABLE_BENCH_MARKING_L2
+    long            Begin_Time,
+                End_Time;
+ #endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     unpack_pk(&pkpv, seed, pk);
     PQCLEAN_KYBER1024_CLEAN_poly_frommsg(&k, m);
     gen_at(at, seed);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "unpack_pk gen_at cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     for (i = 0; i < KYBER_K; i++) {
         PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta1(sp.vec + i, coins, nonce++);
     }
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta1 looped cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     for (i = 0; i < KYBER_K; i++) {
         PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta2(ep.vec + i, coins, nonce++);
     }
     PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta2(&epp, coins, nonce++);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta2 looped cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_polyvec_ntt(&sp);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_ntt cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     // matrix-vector multiplication
     for (i = 0; i < KYBER_K; i++) {
         PQCLEAN_KYBER1024_CLEAN_polyvec_basemul_acc_montgomery(&b.vec[i], &at[i], &sp);
     }
 
     PQCLEAN_KYBER1024_CLEAN_polyvec_basemul_acc_montgomery(&v, &pkpv, &sp);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_basemul_acc_montgomery looped cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_polyvec_invntt_tomont(&b);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_invntt_tomont cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_invntt_tomont(&v);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_invntt_tomont cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_polyvec_add(&b, &b, &ep);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_add cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_add(&v, &v, &epp);
     PQCLEAN_KYBER1024_CLEAN_poly_add(&v, &v, &k);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_add cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_polyvec_reduce(&b);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_reduce cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_reduce(&v);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_reduce cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     pack_ciphertext(c, &b, &v);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "pack_ciphertext cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 }
 
 /*************************************************
@@ -312,16 +406,69 @@ void PQCLEAN_KYBER1024_CLEAN_indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
                                         const uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]) {
     polyvec b, skpv;
     poly v, mp;
+ #ifndef DISABLE_BENCH_MARKING_L2
+    long            Begin_Time,
+                End_Time;
+ #endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     unpack_ciphertext(&b, &v, c);
     unpack_sk(&skpv, sk);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "unpack_ciphertext and unpack_sk cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_polyvec_ntt(&b);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_ntt cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_polyvec_basemul_acc_montgomery(&mp, &skpv, &b);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_polyvec_basemul_acc_montgomery cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_invntt_tomont(&mp);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_invntt_tomont cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_sub(&mp, &v, &mp);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_sub cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_reduce(&mp);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_reduce cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 
+ #ifndef DISABLE_BENCH_MARKING_L2
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L2
     PQCLEAN_KYBER1024_CLEAN_poly_tomsg(m, &mp);
+#ifndef DISABLE_BENCH_MARKING_L2
+    time (End_Time);
+    fprintf(stdout, "PQCLEAN_KYBER1024_CLEAN_poly_tomsg cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L2
 }
