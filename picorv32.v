@@ -647,7 +647,7 @@ module picorv32 #(
 	reg instr_beq, instr_bne, instr_blt, instr_bge, instr_bltu, instr_bgeu;
 	reg instr_lb, instr_lh, instr_lw, instr_lbu, instr_lhu, instr_sb, instr_sh, instr_sw;
 	reg instr_addi, instr_slti, instr_sltiu, instr_xori, instr_ori, instr_andi, instr_slli, instr_srli, instr_srai;
-	reg instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and;
+	reg instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and, instr_aes128;
 	reg instr_rdcycle, instr_rdcycleh, instr_rdinstr, instr_rdinstrh, instr_ecall_ebreak, instr_fence;
 	reg instr_getq, instr_setq, instr_retirq, instr_maskirq, instr_waitirq, instr_timer;
 	wire instr_trap;
@@ -667,6 +667,7 @@ module picorv32 #(
 	reg is_sb_sh_sw;
 	reg is_sll_srl_sra;
 	reg is_lui_auipc_jal_jalr_addi_add_sub;
+	reg is_aes128;
 	reg is_slti_blt_slt;
 	reg is_sltiu_bltu_sltu;
 	reg is_beq_bne_blt_bge_bltu_bgeu;
@@ -679,7 +680,7 @@ module picorv32 #(
 			instr_beq, instr_bne, instr_blt, instr_bge, instr_bltu, instr_bgeu,
 			instr_lb, instr_lh, instr_lw, instr_lbu, instr_lhu, instr_sb, instr_sh, instr_sw,
 			instr_addi, instr_slti, instr_sltiu, instr_xori, instr_ori, instr_andi, instr_slli, instr_srli, instr_srai,
-			instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and,
+			instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and, instr_aes128,
 			instr_rdcycle, instr_rdcycleh, instr_rdinstr, instr_rdinstrh, instr_fence,
 			instr_getq, instr_setq, instr_retirq, instr_maskirq, instr_waitirq, instr_timer};
 
@@ -741,6 +742,7 @@ module picorv32 #(
 		if (instr_sra)      new_ascii_instr = "sra";
 		if (instr_or)       new_ascii_instr = "or";
 		if (instr_and)      new_ascii_instr = "and";
+		if (instr_aes128)   new_ascii_instr = "aes128";
 
 		if (instr_rdcycle)  new_ascii_instr = "rdcycle";
 		if (instr_rdcycleh) new_ascii_instr = "rdcycleh";
@@ -857,6 +859,7 @@ module picorv32 #(
 	always @(posedge clk) begin
 		is_lui_auipc_jal <= |{instr_lui, instr_auipc, instr_jal};
 		is_lui_auipc_jal_jalr_addi_add_sub <= |{instr_lui, instr_auipc, instr_jal, instr_jalr, instr_addi, instr_add, instr_sub};
+		is_aes128 <= |{instr_aes128};
 		is_slti_blt_slt <= |{instr_slti, instr_blt, instr_slt};
 		is_sltiu_bltu_sltu <= |{instr_sltiu, instr_bltu, instr_sltu};
 		is_lbu_lhu_lw <= |{instr_lbu, instr_lhu, instr_lw};
@@ -874,7 +877,7 @@ module picorv32 #(
 			is_lb_lh_lw_lbu_lhu          <= mem_rdata_latched[6:0] == 7'b0000011;
 			is_sb_sh_sw                  <= mem_rdata_latched[6:0] == 7'b0100011;
 			is_alu_reg_imm               <= mem_rdata_latched[6:0] == 7'b0010011;
-			is_alu_reg_reg               <= mem_rdata_latched[6:0] == 7'b0110011;
+			is_alu_reg_reg               <= mem_rdata_latched[6:0] == 7'b0110011 || mem_rdata_latched[6:0] == 7'b1101011;
 
 			{ decoded_imm_j[31:20], decoded_imm_j[10:1], decoded_imm_j[11], decoded_imm_j[19:12], decoded_imm_j[0] } <= $signed({mem_rdata_latched[31:12], 1'b0});
 
@@ -1074,6 +1077,7 @@ module picorv32 #(
 			instr_sra   <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b101 && mem_rdata_q[31:25] == 7'b0100000;
 			instr_or    <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b110 && mem_rdata_q[31:25] == 7'b0000000;
 			instr_and   <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b111 && mem_rdata_q[31:25] == 7'b0000000;
+			instr_aes128<= mem_rdata_q[6:0] == 7'b1101011 /*&& mem_rdata_q[31:25] == 7'b0010000*/;
 
 			instr_rdcycle  <= ((mem_rdata_q[6:0] == 7'b1110011 && mem_rdata_q[31:12] == 'b11000000000000000010) ||
 			                   (mem_rdata_q[6:0] == 7'b1110011 && mem_rdata_q[31:12] == 'b11000000000100000010)) && ENABLE_COUNTERS;
@@ -1113,6 +1117,7 @@ module picorv32 #(
 			};
 
 			is_lui_auipc_jal_jalr_addi_add_sub <= 0;
+			is_aes128 <= 0;
 			is_compare <= 0;
 
 			(* parallel_case *)
@@ -1160,6 +1165,7 @@ module picorv32 #(
 			instr_sra   <= 0;
 			instr_or    <= 0;
 			instr_and   <= 0;
+			instr_aes128<= 0;
 
 			instr_fence <= 0;
 		end
@@ -1276,6 +1282,8 @@ module picorv32 #(
 				alu_out = reg_op1 | reg_op2;
 			instr_andi || instr_and:
 				alu_out = reg_op1 & reg_op2;
+			/*is_aes128:
+				alu_out = do something with reg_op1 ;*/
 			BARREL_SHIFTER && (instr_sll || instr_slli):
 				alu_out = alu_shl;
 			BARREL_SHIFTER && (instr_srl || instr_srli || instr_sra || instr_srai):
@@ -1660,6 +1668,15 @@ module picorv32 #(
 						dbg_rs1val <= cpuregs_rs1;
 						dbg_rs1val_valid <= 1;
 						latched_rd <= latched_rd | irqregs_offset;
+						latched_store <= 1;
+						cpu_state <= cpu_state_fetch;
+					end
+					instr_aes128: begin
+						// ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+						if(((cpuregs_rs1>>7) & 1))
+							reg_out <= (cpuregs_rs1 << 1)^ 32'h1b;
+						else
+							reg_out <= (cpuregs_rs1 << 1)^ 32'h00;
 						latched_store <= 1;
 						cpu_state <= cpu_state_fetch;
 					end

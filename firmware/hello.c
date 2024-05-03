@@ -14,8 +14,6 @@
 {\
 	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
 }
-
-
 /*
 
 This is an implementation of the AES algorithm, specifically ECB, CTR and CBC mode.
@@ -165,6 +163,30 @@ static u_int8 getSBoxValue(u_int8 num)
 */
 #define getSBoxValue(num) (sbox[(num)])
 
+static void call_custom_instruction_aes128(void)
+{
+  uint32_t result, num1=0xAA, num2=28;
+#ifndef DISABLE_BENCH_MARKING
+    int End_Time, Begin_Time;
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING
+  __asm__ volatile ("aes128 %0, %1,%2\n" :"=r"(result):"r"(num1),"r"(num2):);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    print_str("aes128 total cycles:");
+    print_dec(End_Time - Begin_Time);
+    print_str(", Begin cycles:");
+    print_dec(Begin_Time);
+    print_str(", End cycles:");
+    print_dec(End_Time);
+    print_str("\n");
+#endif // DISABLE_BENCH_MARKING
+  print_str("call_custom_instruction_aes128:");
+  print_dec(result);
+  print_str(", 0x");
+  print_hex(result,2);
+  print_str("\n");
+}
 
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states. 
 static void KeyExpansion(u_int8* RoundKey, const u_int8* Key)
@@ -317,7 +339,11 @@ static void ShiftRows(state_t* state)
 
 static u_int8 xtime(u_int8 x)
 {
-  return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+  uint32_t result, num1=(uint32_t)x, num2=0;
+
+  __asm__ volatile ("aes128 %0, %1,%2\n" :"=r"(result):"r"(num1),"r"(num2):);
+  return (u_int8)result;
+  //return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
   //return ((x<<1) ^ (((x>>7) & 1)?0x1b:0));
 }
 
@@ -867,5 +893,6 @@ void hello(void)
 
 	print_str("\nhello world\n");
 	print_str("TIMA:call your custom code here\n");
+  call_custom_instruction_aes128();
 }
 
