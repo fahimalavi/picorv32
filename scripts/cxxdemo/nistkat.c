@@ -27,6 +27,7 @@
 #define crypto_kem_enc     NAMESPACE(crypto_kem_enc)
 #define crypto_kem_dec     NAMESPACE(crypto_kem_dec)
 
+ #ifndef DISABLE_BENCH_MARKING
 //extern long time();
 
 //extern  clock_t     times ();
@@ -38,6 +39,7 @@ long            Begin_Time,
 {\
 	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
 }
+#endif // DISABLE_BENCH_MARKING
 
 void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
 
@@ -75,12 +77,12 @@ int main(void) {
 
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
-    fprintf(fh, "nist_kat_init entropy_input cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+    fprintf(fh, "Main:nist_kat_init entropy_input cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
 #endif // DISABLE_BENCH_MARKING
 
-    fprintf(fh, "count = 0\n");
+    fprintf(fh, "Main:count = 0\n");
     randombytes(seed, 48);
-    fprintBstr(fh, "seed = ", seed, 48);
+    fprintBstr(fh, "Main:seed = ", seed, 48);
 
  #ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
@@ -90,7 +92,7 @@ int main(void) {
 
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
-    fprintf(fh, "nist_kat_init seed cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+    fprintf(fh, "Main:nist_kat_init seed cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
 #endif // DISABLE_BENCH_MARKING
 
 
@@ -102,14 +104,14 @@ int main(void) {
 
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
-    fprintf(fh, "crypto_kem_keypair cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+    fprintf(fh, "Main:crypto_kem_keypair cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
 #endif // DISABLE_BENCH_MARKING
     if (rc != 0) {
         fprintf(stderr, "[kat_kem] %s ERROR: crypto_kem_keypair failed!\n", CRYPTO_ALGNAME);
         return -1;
     }
-    fprintBstr(fh, "pk = ", public_key, CRYPTO_PUBLICKEYBYTES);
-    fprintBstr(fh, "sk = ", secret_key, CRYPTO_SECRETKEYBYTES);
+    fprintBstr(fh, "Main:pk = ", public_key, CRYPTO_PUBLICKEYBYTES);
+    fprintBstr(fh, "Main:sk = ", secret_key, CRYPTO_SECRETKEYBYTES);
 
  #ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
@@ -119,14 +121,14 @@ int main(void) {
 
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
-    fprintf(fh, "crypto_kem_enc cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+    fprintf(fh, "Main:crypto_kem_enc cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
 #endif // DISABLE_BENCH_MARKING
     if (rc != 0) {
         fprintf(stderr, "[kat_kem] %s ERROR: crypto_kem_enc failed!\n", CRYPTO_ALGNAME);
         return -2;
     }
-    fprintBstr(fh, "ct = ", ciphertext, CRYPTO_CIPHERTEXTBYTES);
-    fprintBstr(fh, "ss = ", shared_secret_e, CRYPTO_BYTES);
+    fprintBstr(fh, "Main:ct = ", ciphertext, CRYPTO_CIPHERTEXTBYTES);
+    fprintBstr(fh, "Main:ss = ", shared_secret_e, CRYPTO_BYTES);
 
  #ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
@@ -136,7 +138,7 @@ int main(void) {
 
 #ifndef DISABLE_BENCH_MARKING
     time (End_Time);
-    fprintf(fh, "crypto_kem_dec cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+    fprintf(fh, "Main:crypto_kem_dec cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
 #endif // DISABLE_BENCH_MARKING
 
     if (rc != 0) {

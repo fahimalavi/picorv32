@@ -165,7 +165,7 @@ static u_int8 getSBoxValue(u_int8 num)
 
 static void call_custom_instruction_aes128(void)
 {
-  uint32_t result, num1=0xAA, num2=28;
+  uint32_t result, num1=0x22, num2=0x28;
 #ifndef DISABLE_BENCH_MARKING
     int End_Time, Begin_Time;
     time (Begin_Time);

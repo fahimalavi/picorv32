@@ -647,7 +647,7 @@ module picorv32 #(
 	reg instr_beq, instr_bne, instr_blt, instr_bge, instr_bltu, instr_bgeu;
 	reg instr_lb, instr_lh, instr_lw, instr_lbu, instr_lhu, instr_sb, instr_sh, instr_sw;
 	reg instr_addi, instr_slti, instr_sltiu, instr_xori, instr_ori, instr_andi, instr_slli, instr_srli, instr_srai;
-	reg instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and, instr_aes128;
+	reg instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and, instr_aes128, instr_kyber;
 	reg instr_rdcycle, instr_rdcycleh, instr_rdinstr, instr_rdinstrh, instr_ecall_ebreak, instr_fence;
 	reg instr_getq, instr_setq, instr_retirq, instr_maskirq, instr_waitirq, instr_timer;
 	wire instr_trap;
@@ -668,6 +668,7 @@ module picorv32 #(
 	reg is_sll_srl_sra;
 	reg is_lui_auipc_jal_jalr_addi_add_sub;
 	reg is_aes128;
+	reg is_kyber;
 	reg is_slti_blt_slt;
 	reg is_sltiu_bltu_sltu;
 	reg is_beq_bne_blt_bge_bltu_bgeu;
@@ -680,7 +681,7 @@ module picorv32 #(
 			instr_beq, instr_bne, instr_blt, instr_bge, instr_bltu, instr_bgeu,
 			instr_lb, instr_lh, instr_lw, instr_lbu, instr_lhu, instr_sb, instr_sh, instr_sw,
 			instr_addi, instr_slti, instr_sltiu, instr_xori, instr_ori, instr_andi, instr_slli, instr_srli, instr_srai,
-			instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and, instr_aes128,
+			instr_add, instr_sub, instr_sll, instr_slt, instr_sltu, instr_xor, instr_srl, instr_sra, instr_or, instr_and, instr_aes128, instr_kyber,
 			instr_rdcycle, instr_rdcycleh, instr_rdinstr, instr_rdinstrh, instr_fence,
 			instr_getq, instr_setq, instr_retirq, instr_maskirq, instr_waitirq, instr_timer};
 
@@ -743,6 +744,7 @@ module picorv32 #(
 		if (instr_or)       new_ascii_instr = "or";
 		if (instr_and)      new_ascii_instr = "and";
 		if (instr_aes128)   new_ascii_instr = "aes128";
+		if (instr_kyber)   new_ascii_instr = "kyber";
 
 		if (instr_rdcycle)  new_ascii_instr = "rdcycle";
 		if (instr_rdcycleh) new_ascii_instr = "rdcycleh";
@@ -860,6 +862,7 @@ module picorv32 #(
 		is_lui_auipc_jal <= |{instr_lui, instr_auipc, instr_jal};
 		is_lui_auipc_jal_jalr_addi_add_sub <= |{instr_lui, instr_auipc, instr_jal, instr_jalr, instr_addi, instr_add, instr_sub};
 		is_aes128 <= |{instr_aes128};
+		is_kyber <= |{instr_kyber};
 		is_slti_blt_slt <= |{instr_slti, instr_blt, instr_slt};
 		is_sltiu_bltu_sltu <= |{instr_sltiu, instr_bltu, instr_sltu};
 		is_lbu_lhu_lw <= |{instr_lbu, instr_lhu, instr_lw};
@@ -1077,7 +1080,8 @@ module picorv32 #(
 			instr_sra   <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b101 && mem_rdata_q[31:25] == 7'b0100000;
 			instr_or    <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b110 && mem_rdata_q[31:25] == 7'b0000000;
 			instr_and   <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b111 && mem_rdata_q[31:25] == 7'b0000000;
-			instr_aes128<= mem_rdata_q[6:0] == 7'b1101011 /*&& mem_rdata_q[31:25] == 7'b0010000*/;
+			instr_aes128<= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b000 && mem_rdata_q[31:25] == 7'b0000001;
+			instr_kyber <= is_alu_reg_reg && mem_rdata_q[14:12] == 3'b001 && mem_rdata_q[31:25] == 7'b0000010;
 
 			instr_rdcycle  <= ((mem_rdata_q[6:0] == 7'b1110011 && mem_rdata_q[31:12] == 'b11000000000000000010) ||
 			                   (mem_rdata_q[6:0] == 7'b1110011 && mem_rdata_q[31:12] == 'b11000000000100000010)) && ENABLE_COUNTERS;
@@ -1118,6 +1122,7 @@ module picorv32 #(
 
 			is_lui_auipc_jal_jalr_addi_add_sub <= 0;
 			is_aes128 <= 0;
+			is_kyber<= 0;
 			is_compare <= 0;
 
 			(* parallel_case *)
@@ -1166,6 +1171,7 @@ module picorv32 #(
 			instr_or    <= 0;
 			instr_and   <= 0;
 			instr_aes128<= 0;
+			instr_kyber <= 0;
 
 			instr_fence <= 0;
 		end
@@ -1677,6 +1683,13 @@ module picorv32 #(
 							reg_out <= (cpuregs_rs1 << 1)^ 32'h1b;
 						else
 							reg_out <= (cpuregs_rs1 << 1)^ 32'h00;
+						latched_store <= 1;
+						cpu_state <= cpu_state_fetch;
+					end
+					instr_kyber: begin
+						//t = (a - (int32_t)t * KYBER_Q) >> 16;
+						//cpuregs_rs2 = cpuregs_rs2 * 3329;
+						reg_out <= (cpuregs_rs1 - cpuregs_rs2) >> 16;
 						latched_store <= 1;
 						cpu_state <= cpu_state_fetch;
 					end

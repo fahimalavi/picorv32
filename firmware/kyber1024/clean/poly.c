@@ -5,6 +5,15 @@
 #include "reduce.h"
 #include "symmetric.h"
 #include <stdint.h>
+#define DISABLE_BENCH_MARKING_L3
+#ifndef DISABLE_BENCH_MARKING_L3
+#include <stdio.h>
+
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_BENCH_MARKING_L3
 
 /*************************************************
 * Name:        PQCLEAN_KYBER1024_CLEAN_poly_compress
@@ -212,8 +221,26 @@ void PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta2(poly *r, const uint8_t seed[KYBE
 * Arguments:   - uint16_t *r: pointer to in/output polynomial
 **************************************************/
 void PQCLEAN_KYBER1024_CLEAN_poly_ntt(poly *r) {
+ #ifndef DISABLE_BENCH_MARKING_L3
+    long            Begin_Time,
+                End_Time;
+ #endif // DISABLE_BENCH_MARKING_L3
+ #ifndef DISABLE_BENCH_MARKING_L3
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L3
     PQCLEAN_KYBER1024_CLEAN_ntt(r->coeffs);
+#ifndef DISABLE_BENCH_MARKING_L3
+    time (End_Time);
+    fprintf(stdout, "L3: PQCLEAN_KYBER1024_CLEAN_ntt cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L3
+ #ifndef DISABLE_BENCH_MARKING_L3
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L3
     PQCLEAN_KYBER1024_CLEAN_poly_reduce(r);
+#ifndef DISABLE_BENCH_MARKING_L3
+    time (End_Time);
+    fprintf(stdout, "L3: PQCLEAN_KYBER1024_CLEAN_poly_reduce cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L3
 }
 
 /*************************************************

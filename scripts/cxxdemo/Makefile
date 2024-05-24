@@ -1,4 +1,4 @@
-RISCV_TOOLS_PREFIX = /opt/riscv32ic/bin/riscv32-unknown-elf-
+RISCV_TOOLS_PREFIX = /opt/riscv32ic_aes_kyber/bin/riscv32-unknown-elf-
 CXX = $(RISCV_TOOLS_PREFIX)g++
 CC = $(RISCV_TOOLS_PREFIX)gcc
 AS = $(RISCV_TOOLS_PREFIX)gcc

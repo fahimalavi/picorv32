@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define DISABLE_BENCH_MARKING_L1
+//#define DISABLE_BENCH_MARKING_L1
 
 #define time(cycles)\
 {\

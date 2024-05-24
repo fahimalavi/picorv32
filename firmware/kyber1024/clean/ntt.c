@@ -2,6 +2,15 @@
 #include "params.h"
 #include "reduce.h"
 #include <stdint.h>
+//#define DISABLE_BENCH_MARKING_L4
+#ifndef DISABLE_BENCH_MARKING_L4
+#include <stdio.h>
+
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_BENCH_MARKING_L4
 
 /* Code to generate PQCLEAN_KYBER1024_CLEAN_zetas and zetas_inv used in the number-theoretic transform:
 
@@ -80,6 +89,14 @@ static int16_t fqmul(int16_t a, int16_t b) {
 void PQCLEAN_KYBER1024_CLEAN_ntt(int16_t r[256]) {
     unsigned int len, start, j, k;
     int16_t t, zeta;
+ #ifndef DISABLE_BENCH_MARKING_L4
+    long            Begin_Time,
+                End_Time;
+ #endif // DISABLE_BENCH_MARKING_L4
+
+ #ifndef DISABLE_BENCH_MARKING_L4
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L4
 
     k = 1;
     for (len = 128; len >= 2; len >>= 1) {
@@ -92,6 +109,10 @@ void PQCLEAN_KYBER1024_CLEAN_ntt(int16_t r[256]) {
             }
         }
     }
+#ifndef DISABLE_BENCH_MARKING_L4
+    time (End_Time);
+    fprintf(stdout, "L4: PQCLEAN_KYBER1024_CLEAN_ntt cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L4
 }
 
 /*************************************************
