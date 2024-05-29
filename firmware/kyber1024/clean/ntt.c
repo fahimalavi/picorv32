@@ -2,7 +2,7 @@
 #include "params.h"
 #include "reduce.h"
 #include <stdint.h>
-//#define DISABLE_BENCH_MARKING_L4
+#define DISABLE_BENCH_MARKING_L4
 #ifndef DISABLE_BENCH_MARKING_L4
 #include <stdio.h>
 

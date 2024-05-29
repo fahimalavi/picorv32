@@ -1,10 +1,18 @@
 #include "params.h"
 #include "reduce.h"
 #include <stdint.h>
-//#define DISABLE_BENCH_MARKING_L4
+#define DISABLE_BENCH_MARKING_L4
+//#define DISABLE_CUSTOM_INSTRUCTION
 #ifndef DISABLE_BENCH_MARKING_L4
 #include <stdio.h>
-
+#endif // DISABLE_BENCH_MARKING_L4
+#ifndef DISABLE_CUSTOM_INSTRUCTION
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_CUSTOM_INSTRUCTION
+#ifndef DISABLE_CYCLE_COUNT
 static long L4_QINV_mult=0,L4_QINV_mult_count=0, L4_Aminust_Shift16=0, L4_Aminust_Shift16_count=0;
 static long L4_mult_shift26_barrett_reduce=0,L4_mult_shift26_barrett_reduce_count=0;
 void reset_global_benchmark_var_L4(void)
@@ -24,12 +32,7 @@ void print_global_benchmark_var_barrett_reduce(void)
 {
     fprintf(stdout, "L4: L4_mult_shift26_barrett_reduce:%ld, L4_mult_shift26_barrett_reduce_count:%ld\n", L4_mult_shift26_barrett_reduce,L4_mult_shift26_barrett_reduce_count);
 }
-
-#define time(cycles)\
-{\
-	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
-}
-#endif // DISABLE_BENCH_MARKING_L4
+#endif // DISABLE_CYCLE_COUNT
 
 /*************************************************
 * Name:        PQCLEAN_KYBER1024_CLEAN_montgomery_reduce
@@ -42,35 +45,46 @@ void print_global_benchmark_var_barrett_reduce(void)
 *
 * Returns:     integer in {-q+1,...,q-1} congruent to a * R^-1 modulo q.
 **************************************************/
+
 int16_t PQCLEAN_KYBER1024_CLEAN_montgomery_reduce(int32_t a) {
-    int16_t t;
- #ifndef DISABLE_BENCH_MARKING_L4
+    int16_t t=0;
+#ifndef DISABLE_BENCH_MARKING_L4
     long            Begin_Time,
                 End_Time;
- #endif // DISABLE_BENCH_MARKING_L4
- #ifndef DISABLE_BENCH_MARKING_L4
+#endif // DISABLE_BENCH_MARKING_L4
+#ifdef DISABLE_CUSTOM_INSTRUCTION
+#ifndef DISABLE_BENCH_MARKING_L4
     time (Begin_Time);
- #endif // DISABLE_BENCH_MARKING_L4
+#endif // DISABLE_BENCH_MARKING_L4
     t = (int16_t)a * QINV;
 #ifndef DISABLE_BENCH_MARKING_L4
     time (End_Time);
     //fprintf(stdout, "L4:  (int16_t)a * QINV; cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L4
+#ifndef DISABLE_CYCLE_COUNT
     L4_QINV_mult += End_Time - Begin_Time;
     ++L4_QINV_mult_count;
-#endif // DISABLE_BENCH_MARKING_L4
- #ifndef DISABLE_BENCH_MARKING_L4
+#endif // DISABLE_CYCLE_COUNT
+#endif // DISABLE_CUSTOM_INSTRUCTION
+#ifndef DISABLE_BENCH_MARKING_L4
     time (Begin_Time);
- #endif // DISABLE_BENCH_MARKING_L4
-    //t = (a - (int32_t)t * KYBER_Q) >> 16;
-    __asm__ volatile ("kyber %0, %1,%2\n" :"=r"(t):"r"(a),"r"((int32_t)t * KYBER_Q):);
+#endif // DISABLE_BENCH_MARKING_L4
+#ifdef DISABLE_CUSTOM_INSTRUCTION
+    t = (a - (int32_t)t * KYBER_Q) >> 16;
+#else // DISABLE_CUSTOM_INSTRUCTION
+    __asm__ volatile ("kyber %0, %1,%2\n" :"=r"(t):"r"(a),"r"(t):);
+#endif // DISABLE_CUSTOM_INSTRUCTION
 #ifndef DISABLE_BENCH_MARKING_L4
     time (End_Time);
     //fprintf(stdout, "L4:  (a - (int32_t)t * KYBER_Q) >> 16; cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L4
+#ifndef DISABLE_CYCLE_COUNT
     L4_Aminust_Shift16 += End_Time - Begin_Time;
     ++L4_Aminust_Shift16_count;
-#endif // DISABLE_BENCH_MARKING_L4
+#endif // DISABLE_CYCLE_COUNT
     return t;
 }
+
 /*************************************************
 * Name:        PQCLEAN_KYBER1024_CLEAN_barrett_reduce
 *
@@ -96,9 +110,11 @@ int16_t PQCLEAN_KYBER1024_CLEAN_barrett_reduce(int16_t a) {
     t  = ((int32_t)v * a + (1 << 25)) >> 26;
 #ifndef DISABLE_BENCH_MARKING_L4
     time (End_Time);
+#endif // DISABLE_BENCH_MARKING_L4
+#ifndef DISABLE_CYCLE_COUNT
     L4_mult_shift26_barrett_reduce += End_Time - Begin_Time;
     ++L4_mult_shift26_barrett_reduce_count;
-#endif // DISABLE_BENCH_MARKING_L4
+#endif // DISABLE_CYCLE_COUNT
 
     t *= KYBER_Q;
 

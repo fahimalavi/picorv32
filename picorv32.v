@@ -1687,8 +1687,11 @@ module picorv32 #(
 						cpu_state <= cpu_state_fetch;
 					end
 					instr_kyber: begin
+						//t = (int16_t)a * QINV;-3327
+						cpuregs_rs2 = cpuregs_rs1 * -3327;
+						cpuregs_rs2 = {16'b0000000000000000, cpuregs_rs2[15:0]};
 						//t = (a - (int32_t)t * KYBER_Q) >> 16;
-						//cpuregs_rs2 = cpuregs_rs2 * 3329;
+						cpuregs_rs2 = cpuregs_rs2 * 3329;
 						reg_out <= (cpuregs_rs1 - cpuregs_rs2) >> 16;
 						latched_store <= 1;
 						cpu_state <= cpu_state_fetch;
