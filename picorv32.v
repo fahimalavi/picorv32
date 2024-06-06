@@ -1318,6 +1318,7 @@ module picorv32 #(
 	reg [31:0] cpuregs_rs1;
 	reg [31:0] cpuregs_rs2;
 	reg [regindex_bits-1:0] decoded_rs;
+	reg [31:0] t_kyber;
 
 	always @* begin
 		cpuregs_write = 0;
@@ -1688,11 +1689,11 @@ module picorv32 #(
 					end
 					instr_kyber: begin
 						//t = (int16_t)a * QINV;-3327
-						cpuregs_rs2 = cpuregs_rs1 * -3327;
-						cpuregs_rs2 = {16'b0000000000000000, cpuregs_rs2[15:0]};
+						t_kyber = cpuregs_rs1 * -3327;
+						t_kyber = {16'b0000000000000000, t_kyber[15:0]};
 						//t = (a - (int32_t)t * KYBER_Q) >> 16;
-						cpuregs_rs2 = cpuregs_rs2 * 3329;
-						reg_out <= (cpuregs_rs1 - cpuregs_rs2) >> 16;
+						t_kyber = t_kyber * 3329;
+						reg_out <= (cpuregs_rs1 - t_kyber) >> 16;
 						latched_store <= 1;
 						cpu_state <= cpu_state_fetch;
 					end
