@@ -7,6 +7,7 @@
 
 #include "firmware.h"
 
+//#define DISABLE_CUSTOM_INSTRUCTION
 #define DISABLE_BENCH_MARKING_MIXCOLUMN
 #define DISABLE_BENCH_MARKING_ENCRYPT
 #define DISABLE_BENCH_MARKING_DECRYPT
@@ -339,12 +340,14 @@ static void ShiftRows(state_t* state)
 
 static u_int8 xtime(u_int8 x)
 {
+#ifndef DISABLE_CUSTOM_INSTRUCTION
   uint32_t result, num1=(uint32_t)x, num2=0;
 
   __asm__ volatile ("aes128 %0, %1,%2\n" :"=r"(result):"r"(num1),"r"(num2):);
   return (u_int8)result;
-  //return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
-  //return ((x<<1) ^ (((x>>7) & 1)?0x1b:0));
+#else
+  return ((x<<1) ^ (((x>>7) & 1) * 0x1b));
+#endif // DISABLE_CUSTOM_INSTRUCTION
 }
 
 // MixColumns function mixes the columns of the state matrix
