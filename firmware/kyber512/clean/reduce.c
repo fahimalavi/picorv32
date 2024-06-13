@@ -2,6 +2,14 @@
 #include "reduce.h"
 #include <stdint.h>
 
+//#define DISABLE_CUSTOM_INSTRUCTION
+#ifndef DISABLE_CUSTOM_INSTRUCTION
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_CUSTOM_INSTRUCTION
+
 /*************************************************
 * Name:        PQCLEAN_KYBER512_CLEAN_montgomery_reduce
 *
@@ -14,10 +22,13 @@
 * Returns:     integer in {-q+1,...,q-1} congruent to a * R^-1 modulo q.
 **************************************************/
 int16_t PQCLEAN_KYBER512_CLEAN_montgomery_reduce(int32_t a) {
-    int16_t t;
-
+    int16_t t=0;
+#ifdef DISABLE_CUSTOM_INSTRUCTION
     t = (int16_t)a * QINV;
     t = (a - (int32_t)t * KYBER_Q) >> 16;
+#else
+    __asm__ volatile ("kyber %0, %1,%2\n" :"=r"(t):"r"(a),"r"(t):);
+#endif // DISABLE_CUSTOM_INSTRUCTION
     return t;
 }
 
