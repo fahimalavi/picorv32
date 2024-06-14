@@ -11,10 +11,12 @@
 
 //#define DISABLE_BENCH_MARKING_L1
 
+#ifndef DISABLE_BENCH_MARKING_L1
 #define time(cycles)\
 {\
 	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
 }
+#endif // DISABLE_BENCH_MARKING_L1
 
 /*************************************************
 * Name:        PQCLEAN_KYBER1024_CLEAN_crypto_kem_keypair_derand
@@ -88,8 +90,8 @@ int PQCLEAN_KYBER1024_CLEAN_crypto_kem_enc_derand(uint8_t *ct,
     /* Will contain key, coins */
     uint8_t kr[2 * KYBER_SYMBYTES];
  #ifndef DISABLE_BENCH_MARKING_L1
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L1
 
     memcpy(buf, coins, KYBER_SYMBYTES);
@@ -177,8 +179,8 @@ int PQCLEAN_KYBER1024_CLEAN_crypto_kem_dec(uint8_t *ss,
     uint8_t cmp[KYBER_CIPHERTEXTBYTES + KYBER_SYMBYTES];
     const uint8_t *pk = sk + KYBER_INDCPA_SECRETKEYBYTES;
  #ifndef DISABLE_BENCH_MARKING_L1
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L1
  #ifndef DISABLE_BENCH_MARKING_L1
     time (Begin_Time);

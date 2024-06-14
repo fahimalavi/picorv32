@@ -222,8 +222,8 @@ void PQCLEAN_KYBER1024_CLEAN_poly_getnoise_eta2(poly *r, const uint8_t seed[KYBE
 **************************************************/
 void PQCLEAN_KYBER1024_CLEAN_poly_ntt(poly *r) {
  #ifndef DISABLE_BENCH_MARKING_L3
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L3
  #ifndef DISABLE_BENCH_MARKING_L3
     time (Begin_Time);

@@ -7,6 +7,17 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+//#define DISABLE_BENCH_MARKING_L1
+
+#ifndef DISABLE_BENCH_MARKING_L1
+#include <stdio.h>
+
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_BENCH_MARKING_L1
 /*************************************************
 * Name:        PQCLEAN_KYBER768_CLEAN_crypto_kem_keypair_derand
 *
@@ -78,6 +89,10 @@ int PQCLEAN_KYBER768_CLEAN_crypto_kem_enc_derand(uint8_t *ct,
     uint8_t buf[2 * KYBER_SYMBYTES];
     /* Will contain key, coins */
     uint8_t kr[2 * KYBER_SYMBYTES];
+ #ifndef DISABLE_BENCH_MARKING_L1
+    long            Begin_Time=0,
+                End_Time=0;
+ #endif // DISABLE_BENCH_MARKING_L1
 
     memcpy(buf, coins, KYBER_SYMBYTES);
 
@@ -85,8 +100,15 @@ int PQCLEAN_KYBER768_CLEAN_crypto_kem_enc_derand(uint8_t *ct,
     hash_h(buf + KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
     hash_g(kr, buf, 2 * KYBER_SYMBYTES);
 
+ #ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING_L1
     /* coins are in kr+KYBER_SYMBYTES */
     PQCLEAN_KYBER768_CLEAN_indcpa_enc(ct, buf, pk, kr + KYBER_SYMBYTES);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "L1:PQCLEAN_KYBER768_CLEAN_indcpa_enc cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
     memcpy(ss, kr, KYBER_SYMBYTES);
     return 0;
@@ -142,8 +164,19 @@ int PQCLEAN_KYBER768_CLEAN_crypto_kem_dec(uint8_t *ss,
     uint8_t kr[2 * KYBER_SYMBYTES];
     uint8_t cmp[KYBER_CIPHERTEXTBYTES + KYBER_SYMBYTES];
     const uint8_t *pk = sk + KYBER_INDCPA_SECRETKEYBYTES;
+#ifndef DISABLE_BENCH_MARKING_L1
+    long            Begin_Time=0,
+                End_Time=0;
+#endif // DISABLE_BENCH_MARKING_L1
 
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING_L1
     PQCLEAN_KYBER768_CLEAN_indcpa_dec(buf, ct, sk);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "L1:PQCLEAN_KYBER768_CLEAN_indcpa_dec cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
 
     /* Multitarget countermeasure for coins + contributory KEM */
     memcpy(buf + KYBER_SYMBYTES, sk + KYBER_SECRETKEYBYTES - 2 * KYBER_SYMBYTES, KYBER_SYMBYTES);

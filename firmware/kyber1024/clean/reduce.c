@@ -49,8 +49,8 @@ void print_global_benchmark_var_barrett_reduce(void)
 int16_t PQCLEAN_KYBER1024_CLEAN_montgomery_reduce(int32_t a) {
     int16_t t=0;
 #ifndef DISABLE_BENCH_MARKING_L4
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
 #endif // DISABLE_BENCH_MARKING_L4
 #ifdef DISABLE_CUSTOM_INSTRUCTION
 #ifndef DISABLE_BENCH_MARKING_L4
@@ -99,8 +99,8 @@ int16_t PQCLEAN_KYBER1024_CLEAN_barrett_reduce(int16_t a) {
     int16_t t;
     const int16_t v = ((1 << 26) + KYBER_Q / 2) / KYBER_Q;
  #ifndef DISABLE_BENCH_MARKING_L4
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L4
 
  #ifndef DISABLE_BENCH_MARKING_L4

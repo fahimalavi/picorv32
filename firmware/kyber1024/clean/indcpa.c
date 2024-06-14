@@ -9,11 +9,13 @@
 #include <stdint.h>
 #include <string.h>
 
+#define DISABLE_CYCLE_COUNT
+#define DISABLE_BENCH_MARKING_L2
+
 #ifndef DISABLE_CYCLE_COUNT
 #include "reduce.h"
 #endif // DISABLE_CYCLE_COUNT
-#define DISABLE_BENCH_MARKING_L2
- #ifndef DISABLE_BENCH_MARKING_L2
+#ifndef DISABLE_BENCH_MARKING_L2
 #include <stdio.h>
 #define time(cycles)\
 {\
@@ -273,8 +275,8 @@ void PQCLEAN_KYBER1024_CLEAN_indcpa_enc(uint8_t c[KYBER_INDCPA_BYTES],
     polyvec sp, pkpv, ep, at[KYBER_K], b;
     poly v, k, epp;
  #ifndef DISABLE_BENCH_MARKING_L2
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L2
 
  #ifndef DISABLE_BENCH_MARKING_L2
@@ -433,8 +435,8 @@ void PQCLEAN_KYBER1024_CLEAN_indcpa_dec(uint8_t m[KYBER_INDCPA_MSGBYTES],
     polyvec b, skpv;
     poly v, mp;
  #ifndef DISABLE_BENCH_MARKING_L2
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L2
 
  #ifndef DISABLE_BENCH_MARKING_L2

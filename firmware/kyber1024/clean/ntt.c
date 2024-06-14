@@ -90,8 +90,8 @@ void PQCLEAN_KYBER1024_CLEAN_ntt(int16_t r[256]) {
     unsigned int len, start, j, k;
     int16_t t, zeta;
  #ifndef DISABLE_BENCH_MARKING_L4
-    long            Begin_Time,
-                End_Time;
+    long            Begin_Time=0,
+                End_Time=0;
  #endif // DISABLE_BENCH_MARKING_L4
 
  #ifndef DISABLE_BENCH_MARKING_L4

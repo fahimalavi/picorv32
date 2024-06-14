@@ -27,13 +27,13 @@
 #define crypto_kem_enc     NAMESPACE(crypto_kem_enc)
 #define crypto_kem_dec     NAMESPACE(crypto_kem_dec)
 
- #ifndef DISABLE_BENCH_MARKING
+//#define DISABLE_BENCH_MARKING
+
+#ifndef DISABLE_BENCH_MARKING
 //extern long time();
 
 //extern  clock_t     times ();
 //struct tms      time_info;
-long            Begin_Time,
-                End_Time;
 
 #define time(cycles)\
 {\
@@ -65,14 +65,19 @@ int main(void) {
     uint8_t shared_secret_e[CRYPTO_BYTES];
     uint8_t shared_secret_d[CRYPTO_BYTES];
     int rc;
+#ifndef DISABLE_BENCH_MARKING
+long            Begin_Time=0,
+                End_Time=0;
+#endif // DISABLE_BENCH_MARKING
 
     for (uint8_t i = 0; i < 48; i++) {
         entropy_input[i] = i;
     }
+    fprintf(fh, "entropy_input set,\n");
  #ifndef DISABLE_BENCH_MARKING
     time (Begin_Time);
  #endif // DISABLE_BENCH_MARKING
-
+    fprintf(fh, "Calling nist_kat_init\n");
     nist_kat_init(entropy_input, NULL, 256);
 
 #ifndef DISABLE_BENCH_MARKING
