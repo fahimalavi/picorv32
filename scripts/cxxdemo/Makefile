@@ -7,8 +7,10 @@ CCFLAGS = -MD -Os -Wall -std=c++11
 LDFLAGS = -Wl,--gc-sections
 LDLIBS = -lstdc++
 
+#TYPE=sign
+#SCHEME=dilithium3
 TYPE=kem
-SCHEME=kyber1024
+SCHEME=kyber512
 #SCHEME=mceliece348864
 IMPLEMENTATION=clean
 KAT_RNG=nist
@@ -26,7 +28,7 @@ SCHEME_LIBRARY=$(SCHEME_DIR)/lib$(SCHEME)_$(IMPLEMENTATION).a
 SCHEME_FILES=$(wildcard $(SCHEME_DIR)/*.[chsS])
 
 # This -Wall was supported by the European Commission through the ERC Starting Grant 805031 (EPOQUE)
-#CRYPTO_CFLAGS=-O3 -Wall -Wextra -Wvla -Werror \
+#PQC_CFLAGS=-O3 -Wall -Wextra -Wvla -Werror \
 	   -Wundef -Wshadow -Wcast-align -Wpointer-arith \
 	   -fstrict-aliasing -fno-common -pipe \
 	   -I$(COMMON_DIR) $(EXTRAFLAGS)
@@ -40,7 +42,7 @@ $(SCHEME_LIBRARY): $(SCHEME_FILES)
 test: testbench.vvp firmware32.hex
 	vvp -N testbench.vvp
 	
-test_crypto: testbench.vvp crypto32.hex
+test_pqc: testbench.vvp pqc32.hex
 	vvp -N testbench.vvp
 
 testbench.vvp: testbench.v ../../picorv32.v
@@ -54,9 +56,9 @@ firmware32.hex: firmware.elf start.elf hex8tohex32.py
 	python3 hex8tohex32.py firmware.hex > firmware32.hex
 	rm -f start.tmp firmware.tmp
 
-crypto32.hex: crypto.elf start.elf hex8tohex32.py
+pqc32.hex: pqc.elf start.elf hex8tohex32.py
 	$(RISCV_TOOLS_PREFIX)objcopy -O verilog start.elf start.tmp
-	$(RISCV_TOOLS_PREFIX)objcopy -O verilog crypto.elf firmware.tmp
+	$(RISCV_TOOLS_PREFIX)objcopy -O verilog pqc.elf firmware.tmp
 	cat start.tmp firmware.tmp > firmware.hex
 	python3 hex8tohex32.py firmware.hex > firmware32.hex
 	rm -f start.tmp firmware.tmp
@@ -65,9 +67,9 @@ firmware.elf: firmware.o syscalls.o
 	$(CC) $(LDFLAGS) -o $@ $^ -T ../../firmware/riscv.ld $(LDLIBS)
 	chmod -x firmware.elf
 
-crypto.elf: syscalls.o $(SCHEME_LIBRARY) $(COMMON_FILES) $(TEST_COMMON_DIR)/$(KAT_RNG)katrng.c $(COMMON_HEADERS)
-	$(CC) $(LDFLAGS) $(CRYPTO_CFLAGS) -I$(COMMON_DIR) -DPQCLEAN_NAMESPACE=PQCLEAN_$(SCHEME_UPPERCASE)_$(IMPLEMENTATION_UPPERCASE) -I$(SCHEME_DIR) $(KAT_RNG)kat.c $(COMMON_FILES) $(TEST_COMMON_DIR)/$(KAT_RNG)katrng.c -o $@  syscalls.o  -T ../../firmware/riscv.ld -L$(SCHEME_DIR) -l$(SCHEME)_$(IMPLEMENTATION) 
-	chmod -x crypto.elf
+pqc.elf: syscalls.o $(SCHEME_LIBRARY) $(COMMON_FILES) $(TEST_COMMON_DIR)/$(KAT_RNG)katrng.c $(COMMON_HEADERS)
+	$(CC) $(LDFLAGS) $(PQC_CFLAGS) -I$(COMMON_DIR) -DPQCLEAN_NAMESPACE=PQCLEAN_$(SCHEME_UPPERCASE)_$(IMPLEMENTATION_UPPERCASE) -I$(SCHEME_DIR) $(KAT_RNG)kat_$(TYPE).c $(COMMON_FILES) $(TEST_COMMON_DIR)/$(KAT_RNG)katrng.c -o $@  syscalls.o  -T ../../firmware/riscv.ld -L$(SCHEME_DIR) -l$(SCHEME)_$(IMPLEMENTATION) 
+	chmod -x pqc.elf
 
 start.elf: start.S start.ld
 	$(CC) -nostdlib -o start.elf start.S -T start.ld $(LDLIBS)
@@ -75,7 +77,7 @@ start.elf: start.S start.ld
 
 clean:
 	rm -f *.o *.d *.tmp start.elf
-	rm -f firmware.elf crypto.elf firmware.hex firmware32.hex
+	rm -f firmware.elf pqc.elf firmware.hex firmware32.hex
 	rm -f testbench.vvp testbench.vcd
 	cd $(SCHEME_DIR) && $(MAKE) clean
 
