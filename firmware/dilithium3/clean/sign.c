@@ -7,6 +7,14 @@
 #include "sign.h"
 #include "symmetric.h"
 #include <stdint.h>
+#define DISABLE_BENCH_MARKING_L1
+#ifndef DISABLE_BENCH_MARKING_L1
+#include <stdio.h>
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_BENCH_MARKING_L1
 
 /*************************************************
 * Name:        PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_keypair
@@ -204,11 +212,23 @@ int PQCLEAN_DILITHIUM3_CLEAN_crypto_sign(uint8_t *sm,
         size_t mlen,
         const uint8_t *sk) {
     size_t i;
+#ifndef DISABLE_BENCH_MARKING_L1
+    long            Begin_Time=0,
+                End_Time=0;
+#endif // DISABLE_BENCH_MARKING_L1
 
     for (i = 0; i < mlen; ++i) {
         sm[PQCLEAN_DILITHIUM3_CLEAN_CRYPTO_BYTES + mlen - 1 - i] = m[mlen - 1 - i];
     }
+
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (Begin_Time);
+#endif // DISABLE_BENCH_MARKING_L1
     PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_signature(sm, smlen, sm + PQCLEAN_DILITHIUM3_CLEAN_CRYPTO_BYTES, mlen, sk);
+#ifndef DISABLE_BENCH_MARKING_L1
+    time (End_Time);
+    fprintf(stdout, "L1:PQCLEAN_DILITHIUM3_CLEAN_crypto_sign_signature cycles = %ld, begin:%ld, end:%ld\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING_L1
     *smlen += mlen;
     return 0;
 }

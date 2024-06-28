@@ -880,7 +880,7 @@ module picorv32 #(
 			is_lb_lh_lw_lbu_lhu          <= mem_rdata_latched[6:0] == 7'b0000011;
 			is_sb_sh_sw                  <= mem_rdata_latched[6:0] == 7'b0100011;
 			is_alu_reg_imm               <= mem_rdata_latched[6:0] == 7'b0010011;
-			is_alu_reg_reg               <= mem_rdata_latched[6:0] == 7'b0110011 || mem_rdata_latched[6:0] == 7'b1101011;
+			is_alu_reg_reg               <= mem_rdata_latched[6:0] == 7'b0110011 || mem_rdata_latched[6:0] == 7'b0101011;
 
 			{ decoded_imm_j[31:20], decoded_imm_j[10:1], decoded_imm_j[11], decoded_imm_j[19:12], decoded_imm_j[0] } <= $signed({mem_rdata_latched[31:12], 1'b0});
 

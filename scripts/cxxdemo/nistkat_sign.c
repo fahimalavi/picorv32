@@ -9,6 +9,14 @@
 #include "api.h"
 #include "randombytes.h"
 
+//#define DISABLE_BENCH_MARKING
+#ifndef DISABLE_BENCH_MARKING
+#define time(cycles)\
+{\
+	__asm__ volatile ("rdcycle %0" : "=r"(cycles));\
+}
+#endif // DISABLE_BENCH_MARKING
+
 // https://stackoverflow.com/a/1489985/1711232
 #define PASTER(x, y) x##_##y
 #define EVALUATOR(x, y) PASTER(x, y)
@@ -48,7 +56,13 @@ int main(void) {
     uint8_t m[33];
     uint8_t sm[33 + CRYPTO_BYTES];
     int rc;
+#ifndef DISABLE_BENCH_MARKING
+    long            Begin_Time=0, End_Time=0;
+#endif // DISABLE_BENCH_MARKING
 
+ #ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING
     for (uint8_t i = 0; i < 48; i++) {
         entropy_input[i] = i;
     }
@@ -66,6 +80,14 @@ int main(void) {
 
     nist_kat_init(seed, NULL, 256);
 
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    fprintf(fh, "Main:crypto_sign_keypair/printouts/randombytes etc. cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING
+
+ #ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING
     rc = crypto_sign_keypair(public_key, secret_key);
     if (rc != 0) {
         fprintf(stderr, "[kat_kem] %s ERROR: crypto_kem_keypair failed!\n", CRYPTO_ALGNAME);
@@ -75,6 +97,10 @@ int main(void) {
     fprintBstr(fh, "sk = ", secret_key, CRYPTO_SECRETKEYBYTES);
 
     rc = crypto_sign(sm, &smlen, m, mlen, secret_key);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    fprintf(fh, "Main:crypto_sign(Compute signed message.) cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING
     if (rc != 0) {
         fprintf(stderr, "[kat_kem] %s ERROR: crypto_sign failed!\n", CRYPTO_ALGNAME);
         return -2;
@@ -82,7 +108,14 @@ int main(void) {
     fprintf(fh, "smlen = %zu\n", smlen);
     fprintBstr(fh, "sm = ", sm, smlen);
 
+ #ifndef DISABLE_BENCH_MARKING
+    time (Begin_Time);
+ #endif // DISABLE_BENCH_MARKING
     rc = crypto_sign_open(sm, &mlen1, sm, smlen, public_key);
+#ifndef DISABLE_BENCH_MARKING
+    time (End_Time);
+    fprintf(fh, "Main:crypto_sign_open(Verify signed message) cycles = %d, begin:%d, end:%d\n", End_Time - Begin_Time,Begin_Time,End_Time);
+#endif // DISABLE_BENCH_MARKING
     if (rc != 0) {
         fprintf(stderr, "[kat_kem] %s ERROR: crypto_sign_open failed!\n", CRYPTO_ALGNAME);
         return -3;

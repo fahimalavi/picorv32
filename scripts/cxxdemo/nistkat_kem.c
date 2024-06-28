@@ -1,4 +1,3 @@
-#if(1)
 #include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -160,12 +159,3 @@ long            Begin_Time=0,
     return 0;
 
 }
-#else
-#include <stdio.h>
-
-int main()
-{
-	printf("Hello World, C!\n");
-	return 0;
-}
-#endif

@@ -1,4 +1,4 @@
-RISCV_TOOLS_PREFIX = /opt/riscv32ic_aes_kyber/bin/riscv32-unknown-elf-
+RISCV_TOOLS_PREFIX = ../../riscv32ic/bin/riscv32-unknown-elf-
 CXX = $(RISCV_TOOLS_PREFIX)g++
 CC = $(RISCV_TOOLS_PREFIX)gcc
 AS = $(RISCV_TOOLS_PREFIX)gcc
@@ -8,9 +8,9 @@ LDFLAGS = -Wl,--gc-sections
 LDLIBS = -lstdc++
 
 #TYPE=sign
-#SCHEME=dilithium3
+SCHEME=dilithium3
 TYPE=kem
-SCHEME=kyber512
+SCHEME=kyber1024
 #SCHEME=mceliece348864
 IMPLEMENTATION=clean
 KAT_RNG=nist
