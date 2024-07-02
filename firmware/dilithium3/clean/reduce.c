@@ -1,6 +1,7 @@
 #include "params.h"
 #include "reduce.h"
 #include <stdint.h>
+//#define DISABLE_CUSTOM_INSTRUCTION
 
 /*************************************************
 * Name:        PQCLEAN_DILITHIUM3_CLEAN_montgomery_reduce
@@ -13,10 +14,13 @@
 * Returns r.
 **************************************************/
 int32_t PQCLEAN_DILITHIUM3_CLEAN_montgomery_reduce(int64_t a) {
-    int32_t t;
-
+    int32_t t=0;
+#ifdef DISABLE_CUSTOM_INSTRUCTION
     t = (int32_t)((uint64_t)a * (uint64_t)QINV);
     t = (a - (int64_t)t * Q) >> 32;
+#else // DISABLE_CUSTOM_INSTRUCTION
+    __asm__ volatile ("dilithium %0, %1,%2\n" :"=r"(t):"r"((uint32_t)(a>>32)),"r"((uint32_t)(a)):);
+#endif // DISABLE_CUSTOM_INSTRUCTION
     return t;
 }
 
