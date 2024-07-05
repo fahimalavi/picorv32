@@ -8,7 +8,7 @@ LDFLAGS = -Wl,--gc-sections
 LDLIBS = -lstdc++
 
 #TYPE=sign
-SCHEME=dilithium3
+#SCHEME=dilithium3
 TYPE=kem
 SCHEME=kyber1024
 #SCHEME=mceliece348864

@@ -16,6 +16,32 @@ Ubuntu 20.04 has `gcc-riscv64-unknown-elf`). To compile using those set
 PicoRV32 is free and open hardware licensed under the [ISC license](http://en.wikipedia.org/wiki/ISC_license)
 (a license that is similar in terms to the MIT license or the 2-clause BSD license).
 
+Modified RISC-V core
+---------------------------------
+This repository has been modified to execute PQC CRYSTAL Kyber 512, Kyber 768, Kyber 1024, digital signature scheme Dilithium 3, AES-128 bit encryption and decryption on modified PicoRV32.
+
+Three new instructions has been added in this repository 'kyber, 'dilithium' and 'aes128' and firmware has been modified to use all three new instructions 
+
+Go to cxxdemo repository and run 
+
+`make test_pqc TYPE=kem SCHEME=kyber512` 
+
+to execute Kyber 512 on PicoRV32 (you can also change scheme to kyber768 and kyber1024).
+
+`make test_pqc TYPE=sign SCHEME=dilithium3` 
+
+to execute dilithium 3.
+
+To execute AES-128 bit encryption and decryption, you can go to root of this repository and execute `make test_verilator`
+
+Download modified tool-chain repository
+---------------------------------
+You can either build toolchain with new assembly instruction or download from 
+
+https://github.com/fahimalavi/riscv32ic_toolchain_custom_instruction 
+
+
+
 #### Table of Contents
 
 - [Features and Typical Applications](#features-and-typical-applications)
